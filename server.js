@@ -65,33 +65,31 @@ dotenv.config();
 const app = express();
 app.use(bodyParser.json());
 
-// Your actual Render server
+// Actual Render server
 const TARGET_URL = "https://human-detection-y1pc.onrender.com/api/human-data";
 
 // Health check
-app.get("/", (req, res) => res.send("ESP32 HTTP Proxy is running 🚀"));
+app.get("/", (req, res) => res.send("ESP32 HTTP Proxy running 🚀"));
 
 // Proxy POST route
 app.post("/api/human-data", async (req, res) => {
   try {
     console.log("📦 Incoming data from ESP32:", req.body);
 
-    // Forward data to actual server
+    // Forward to actual server
     await axios.post(TARGET_URL, req.body, {
       headers: { "Content-Type": "application/json" },
-      maxRedirects: 0,             // Don't follow redirects
+      maxRedirects: 0, // Don't follow redirects
       validateStatus: status => status >= 200 && status < 400
     });
 
-    // Always respond with 200 OK and a small JSON body
+    // Always return 200 OK to SIM800L
     res.status(200).json({ message: "Data received by proxy ✅" });
     console.log("✅ Data forwarded successfully!");
 
   } catch (error) {
     console.error("❌ Error forwarding data:", error.message);
-
-    // Always return 200 OK to SIM800L to avoid retries for proxy issues
-    res.status(200).json({ message: "Proxy error, but SIM800L notified ✅" });
+    res.status(200).json({ message: "Proxy received data, but forwarding failed" });
   }
 });
 
