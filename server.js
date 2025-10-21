@@ -12,21 +12,41 @@ app.use(bodyParser.json());
 const TARGET_URL = "https://human-detection-y1pc.onrender.com/api/human-data";
 
 // Proxy POST route
+// app.post("/api/human-data", async (req, res) => {
+//   try {
+//     console.log("📦 Incoming data from ESP32:", req.body);
+
+//     const response = await axios.post(TARGET_URL, req.body, {
+//       headers: { "Content-Type": "application/json" },
+//     });
+
+//     console.log("✅ Data forwarded successfully!");
+//     res.status(response.status).json(response.data);
+//   } catch (error) {
+//     console.error("❌ Error forwarding data:", error.message);
+//     res.status(500).json({ error: error.message });
+//   }
+// });
+
 app.post("/api/human-data", async (req, res) => {
   try {
     console.log("📦 Incoming data from ESP32:", req.body);
 
-    const response = await axios.post(TARGET_URL, req.body, {
+    // Forward data to target server
+    await axios.post(TARGET_URL, req.body, {
       headers: { "Content-Type": "application/json" },
+      maxRedirects: 0, // IMPORTANT: prevent Axios from following redirects
+      validateStatus: status => status >= 200 && status < 400 // Accept 3xx as OK
     });
 
     console.log("✅ Data forwarded successfully!");
-    res.status(response.status).json(response.data);
+    res.status(200).json({ message: "Data received by proxy ✅" }); // Always 200
   } catch (error) {
     console.error("❌ Error forwarding data:", error.message);
     res.status(500).json({ error: error.message });
   }
 });
+
 
 // Health check
 app.get("/", (req, res) => res.send("ESP32 HTTP Proxy is running 🚀"));
